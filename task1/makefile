@@ -1,2 +1,2 @@
 all:
-	g++-13 main.cpp -o main -Wall -Werror -pthread
+	g++-13 main.cpp -o main -O2 -Wall -Werror -pthread

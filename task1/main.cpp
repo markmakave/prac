@@ -26,15 +26,15 @@ private:
 int main(int argc, char** argv)
 {
     if (argc != 3) {
-        std::cout << "Usage: " << argv[0] << " <partition> <num_threads>" << std::endl;
-        return 0;
+        std::cout << "Usage: " << argv[0] << " <num_segments> <num_threads>" << std::endl;
+        return 1;
     }
 
-    int partition = std::atoi(argv[1]), num_threads = std::atoi(argv[2]);
-    int iterations = partition / num_threads;
-    double dx = 1.0 / partition;
+    int num_segments = std::atoi(argv[1]), num_threads = std::atoi(argv[2]);
+    int iterations = num_segments / num_threads;
+    double dx = 1.0 / num_segments;
 
-    double pi = 0;
+    double pi;
     std::mutex pi_mutex;
 
     auto job = [&](int thread_id) {
@@ -48,18 +48,23 @@ int main(int argc, char** argv)
         pi += local_pi;
     };
 
-    std::vector<std::thread> thread_pool;
-
     Timer timer;
 
-    for (int i = 0; i < num_threads; ++i)
-        thread_pool.emplace_back(job, i);
+    enum { ITERATIONS = 1 };
+    for (int iteration = 0; iteration < ITERATIONS; ++iteration) {
+        pi = 0;
 
-    for (auto& thread : thread_pool)
-        thread.join();
-    pi *= dx;
+        std::vector<std::thread> thread_pool;
+        for (int i = 0; i < num_threads; ++i)
+            thread_pool.emplace_back(job, i);
 
-    std::cout << pi << "\nElapsed time: " << timer.elapsed() << " s\n";
+        for (auto& thread : thread_pool)
+            thread.join();
+
+        pi *= dx;
+    }
+
+    std::cout << pi << "\nElapsed time: " << timer.elapsed() / ITERATIONS << " s\n";
 
     return 0;
 }
