@@ -30,8 +30,8 @@ enum STRATEGY { IJK, IKJ, KIJ, JIK, JKI, KJI };
 template <enum STRATEGY>
 void matmul(
     const int32_t* A,
-const int32_t* B,
-      int32_t* C,
+    const int32_t* B,
+          int32_t* C,
     const int n
 );
 
@@ -60,6 +60,7 @@ void matmul<IKJ>(
           int32_t* C,
     const int n
 ) {
+    std::fill(C, C + n * n, 0);
     for (int32_t i = 0; i < n; ++i) {
         for (int32_t k = 0; k < n; ++k) {
             int32_t cache = A[i * n + k];
@@ -77,6 +78,7 @@ void matmul<KIJ>(
           int32_t* C,
     const int n
 ) {
+    std::fill(C, C + n * n, 0);
     for (int32_t k = 0; k < n; ++k) {
         for (int32_t i = 0; i < n; ++i) {
             int32_t cache = A[i * n + k];
@@ -112,6 +114,7 @@ void matmul<JKI>(
           int32_t* C,
     const int n
 ) {
+    std::fill(C, C + n * n, 0);
     for (int32_t j = 0; j < n; ++j) {
         for (int32_t k = 0; k < n; ++k) {
             int32_t cache = B[k * n + j];
@@ -129,6 +132,7 @@ void matmul<KJI>(
           int32_t* C,
     const int n
 ) {
+    std::fill(C, C + n * n, 0);
     for (int32_t k = 0; k < n; ++k) {
         for (int32_t j = 0; j < n; ++j) {
             int32_t cache = B[k * n + j];
@@ -186,7 +190,7 @@ int main(int argc, char** argv) {
     int n = std::sqrt(A.size());
     
     std::map<std::string, void(*)(const int32_t*, const int32_t*, int32_t*, const int)> launch{
-        { "ijk", matmul<IKJ> },
+        { "ijk", matmul<IJK> },
         { "ikj", matmul<IKJ> },
         { "kij", matmul<KIJ> },
         { "jik", matmul<JIK> },
@@ -194,18 +198,16 @@ int main(int argc, char** argv) {
         { "kji", matmul<KJI> }
     };
 
-
-
     Timer t;
     for (int i = 0; i < iterations; ++i) {
-        std::fill(C.begin(), C.end(), 0);
         launch[mode](A.data(), B.data(), C.data(), n);
     }
     std::cout << "Average elapsed time for '" << mode << "' is " << t.elapsed() / iterations << "s\n";
 
     write_matrix(C, C_filename);
 
-    system("md5sum C.bin D.bin");
+    // Check results
+    // system("md5sum C.bin REF.bin");
 
     return 0;
 }
