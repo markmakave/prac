@@ -148,7 +148,7 @@ void matmul<KJI>(
 
 int main(int argc, char** argv) {
     if (argc < 5) {
-        std::cerr << "Usage: " << argv[0] << " <A filename> <B filename> <C filename> <mode>\n";
+        std::cerr << "Usage: " << argv[0] << " <A filename> <B filename> <C filename> <mode> [iterations]\n";
         return 1;
     }
 
@@ -156,6 +156,10 @@ int main(int argc, char** argv) {
                *B_filename = argv[2],
                *C_filename = argv[3],
                *mode = argv[4];
+
+    int iterations = 1;
+    if (argc > 5)
+        iterations = std::atoi(argv[5]);
     
     auto read_matrix = [](const char* filename) -> std::vector<int32_t> {
         std::ifstream f(filename);
@@ -203,16 +207,24 @@ int main(int argc, char** argv) {
     int event_set = PAPI_NULL;
     PAPI_CHECK(PAPI_create_eventset(&event_set));
     PAPI_CHECK(PAPI_add_event(event_set, PAPI_L1_DCM));
-    PAPI_CHECK(PAPI_add_event(event_set, PAPI_L2_));
+    PAPI_CHECK(PAPI_add_event(event_set, PAPI_L2_DCM));
 
     auto& entry = launch[mode];
 
-    long long cm[2];
-    PAPI_CHECK(PAPI_start(event_set));
-    entry(A.data(), B.data(), C.data(), n);
-    PAPI_CHECK(PAPI_stop(event_set, cm));
+    long long cm_avg[2]{};
+    long long cm_iteration[2];
+    for (int i = 0; i < iterations; ++i) {
+        PAPI_CHECK(PAPI_start(event_set));
+        entry(A.data(), B.data(), C.data(), n);
+        PAPI_CHECK(PAPI_stop(event_set, cm_iteration));
 
-    std::cout << "Mode: " << mode << "\nL1 misses: " << cm[0] << "\nL2 misses: " << cm[1] << '\n';
+        cm_avg[0] += cm_iteration[0];
+        cm_avg[1] += cm_iteration[1];
+    }
+    cm_avg[0] /= iterations;
+    cm_avg[1] /= iterations;
+
+    std::cout << "Mode: " << mode << "\nL1 misses: " << cm_avg[0] << "\nL2 misses: " << cm_avg[1] << '\n';
 
     write_matrix(C, C_filename);
 
