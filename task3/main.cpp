@@ -193,7 +193,7 @@ int main(int argc, char** argv) {
 
     int n = std::sqrt(A.size());
     
-    std::array launch{
+    std::array<void(*)(const int32_t* A, const int32_t* B, int32_t* C, const int n), 6> launch{
         matmul<IJK>,
         matmul<IKJ>,
         matmul<KIJ>,

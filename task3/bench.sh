@@ -1,6 +1,6 @@
 #!/bin/bash
 
-modes=("ijk" "ikj" "kij" "jik" "jki" "kji")
+modes=(0, 1, 2, 3, 4, 5)
 
 for m in ${modes[@]}
 do
