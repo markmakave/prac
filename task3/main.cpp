@@ -154,8 +154,9 @@ int main(int argc, char** argv) {
 
     const char *A_filename = argv[1],
                *B_filename = argv[2],
-               *C_filename = argv[3],
-               *mode = argv[4];
+               *C_filename = argv[3];
+
+    int mode = std::atoi(argv[4]);
 
     int iterations = 1;
     if (argc > 5)
@@ -192,13 +193,13 @@ int main(int argc, char** argv) {
 
     int n = std::sqrt(A.size());
     
-    std::map<std::string, void(*)(const int32_t*, const int32_t*, int32_t*, const int)> launch{
-        { "ijk", matmul<IJK> },
-        { "ikj", matmul<IKJ> },
-        { "kij", matmul<KIJ> },
-        { "jik", matmul<JIK> },
-        { "jki", matmul<JKI> },
-        { "kji", matmul<KJI> }
+    std::array launch{
+        matmul<IJK>,
+        matmul<IKJ>,
+        matmul<KIJ>,
+        matmul<JIK>,
+        matmul<JKI>,
+        matmul<KJI>
     };
 
     int ret = PAPI_library_init(PAPI_VER_CURRENT);
